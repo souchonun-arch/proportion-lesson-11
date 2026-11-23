@@ -219,10 +219,25 @@ function clickSound(){
   if(!SOUND_ON)return;
   DM.tone(660,.05,'sine',.10);
 }
+/* 時間頓挫：凍結戰場動畫 60ms，令命中有重量感。
+   ⚠️ 必須同時還原 transition 同 animationPlayState，否則元素會永久卡住，
+   導致按鈕 hover / 點擊反應失效（學生會以為「不能輸入」）。 */
 function hitstop(ms=60){
-  const targets=document.querySelectorAll('#stage, #stage *');
-  targets.forEach(el=>{el.style.transition='none';el.style.animationPlayState='paused';});
-  setTimeout(()=>{targets.forEach(el=>{el.style.animationPlayState='running';});},ms);
+  const targets=[...document.querySelectorAll('#stage, #stage *')];
+  const saved=targets.map(el=>{
+    const st=el.style;
+    return {el, transition:st.transition, playState:st.animationPlayState};
+  });
+  targets.forEach(el=>{
+    el.style.transition='none';
+    el.style.animationPlayState='paused';
+  });
+  setTimeout(()=>{
+    saved.forEach(({el,transition,playState})=>{
+      el.style.transition=transition;
+      el.style.animationPlayState=playState;
+    });
+  },ms);
 }
 function shake(el,level='soft'){
   if(!el)return;
@@ -277,19 +292,35 @@ async function ultimateAnticipation(name){
   const stage=document.getElementById('stage');
   curtain.style.opacity='.72';
   title.textContent=name;
-  title.classList.remove('show');void title.offsetWidth;title.classList.add('show');
+  title.classList.remove('show','fade');
+  void title.offsetWidth;
+  title.classList.add('show');
   if(SOUND_ON){DM.tone(180,.5,'sawtooth',.16);DM.tone(90,.7,'square',.14);}
   await new Promise(r=>setTimeout(r,500));
   curtain.style.opacity='0';
   shake(stage,'hard');
+  // 大字停留 1.1 秒後淡出消失，唔好永久霸佔畫面
+  await new Promise(r=>setTimeout(r,1100));
+  title.classList.remove('show');
+  title.classList.add('fade');
+  setTimeout(()=>{
+    title.classList.remove('fade');
+    title.textContent='';
+  },400);
 }
 /* UI 呼吸：只作用喺「需要學生操作」的元素（例如待答的題目、卡片），
-   絕對唔好掛喺整張關卡卡片上 —— 否則連插圖都會跟住縮放，非常突兀 */
+   絕對唔好掛喺整張關卡卡片上 —— 否則連插圖都會跟住縮放，非常突兀。
+   ⚠️ 呼吸動畫唔可以掛喺會被 hitstop 凍結的元素上，
+   否則還原 animationPlayState 時會令佢永久停喺縮放狀態。 */
 function armIdleBreath(el,delay=4200){
   if(!el)return;
   clearTimeout(el._idleT);
   el.classList.remove('breathe');
-  el._idleT=setTimeout(()=>el.classList.add('breathe'),delay);
+  el._idleT=setTimeout(()=>{
+    // 確保當刻冇其他動畫凍結住，先加呼吸 class
+    if(el.getAnimations&&el.getAnimations().some(a=>a.playState==='paused'))return;
+    el.classList.add('breathe');
+  },delay);
 }
 
 /* ═══════════════════ 3. FX Canvas 迴圈 ═══════════════════ */
