@@ -995,12 +995,18 @@ function renderL5(){
         <div class="q-line" style="margin-top:18px">
           <span class="lab">(a)</span> 正方形 A 的邊長和周長的比是 <span class="blank" id="q5a1">?</span>，
           正方形 B 的邊長和周長的比是 <span class="blank" id="q5a2">?</span>，
-          這兩個比 <span class="blank pick" id="q5a3" data-pick="yesno">?</span> 組成比例。
+          這兩個比 <span class="pick-group" id="q5a3" data-pick="yesno">
+            <button type="button" class="pick-btn" data-v="yes">可以</button>
+            <button type="button" class="pick-btn" data-v="no">不可以</button>
+          </span> 組成比例。
         </div>
         <div class="q-line" style="margin-top:18px">
           <span class="lab">(b)</span> 正方形 A 和正方形 B 的邊長的比是 <span class="blank" id="q5b1">?</span>，
           它們的周長的比是 <span class="blank" id="q5b2">?</span>，
-          這兩個比 <span class="blank pick" id="q5b3" data-pick="yesno">?</span> 組成比例。
+          這兩個比 <span class="pick-group" id="q5b3" data-pick="yesno">
+            <button type="button" class="pick-btn" data-v="yes">可以</button>
+            <button type="button" class="pick-btn" data-v="no">不可以</button>
+          </span> 組成比例。
         </div>
         <div class="opts" style="justify-content:center">
           <button class="btn" id="checkL5">🔍 檢查答案</button>
@@ -1015,17 +1021,18 @@ function renderL5(){
   </div>`;
 }
 function bindL5(){
-  const picks={};
-  $$('.blank.pick').forEach(b=>{
-    b.onclick=()=>{
-      if(b.dataset.done)return;
-      const cur=b.dataset.val;
-      const next=cur==='yes'?'no':(cur==='no'?'yes':'yes');
-      b.dataset.val=next;
-      b.textContent=next==='yes'?'可以':'不可以';
-      b.style.color=next==='yes'?'var(--sky-d)':'var(--no)';
-      clickSound();
-    };
+  // 「可以／不可以」按鈕組
+  $$('.pick-group').forEach(group=>{
+    group.querySelectorAll('.pick-btn').forEach(btn=>{
+      btn.onclick=()=>{
+        if(group.dataset.done)return;
+        group.dataset.val=btn.dataset.v;
+        group.querySelectorAll('.pick-btn').forEach(b=>{
+          b.classList.toggle('on',b===btn);
+        });
+        clickSound();
+      };
+    });
   });
   $('#checkL5').onclick=()=>{
     $('#q5a1').textContent='13 : 52';$('#q5a1').classList.add('ans');
@@ -1034,12 +1041,25 @@ function bindL5(){
     $('#q5b2').textContent='52 : 84';$('#q5b2').classList.add('ans');
     const a=$('#q5a3'),c=$('#q5b3');
     const okA=a.dataset.val==='yes',okB=c.dataset.val==='yes';
-    a.classList.add('ans');c.classList.add('ans');
-    $('#fbL5').innerHTML=fb(okA&&okB?'good':'bad',(okA&&okB)?'🎉':'💡',
+    // 標示對錯
+    [[a,okA],[c,okB]].forEach(([g,ok])=>{
+      g.classList.add(ok?'pick-ok':'pick-no');
+      g.querySelectorAll('.pick-btn').forEach(b=>{
+        if((b.dataset.v==='yes')===ok)b.classList.add('ans');
+      });
+    });
+    const both=okA&&okB;
+    $('#fbL5').innerHTML=fb(both?'good':'bad',both?'🎉':'💡',
       `<b>(a)</b> 13 : 52 = 1 : 4，21 : 84 = 1 : 4，兩個比值相等，<b>可以</b>組成比例。<br>
        <b>(b)</b> 13 : 21 = 13 : 21，52 : 84 = 13 : 21，兩個比值相等，<b>可以</b>組成比例。`+
-      ((okA&&okB)?'':`<br><b>提示：</b> 把兩個比都化簡成最簡整數比，再比較是否一樣。`));
-    if(okA&&okB){$('#goL5').disabled=false;answer(true,'l5');}
+      (both?'':`<br><b>提示：</b> 把兩個比都化簡成最簡整數比，再比較是否一樣。`));
+    if(both){$('#goL5').disabled=false;answer(true,'l5');}
+    else{
+      recordMiss('l5',{level:5,
+        q:'正方形 A、B 的邊長與周長所成的比',
+        you:`(a) ${a.dataset.val==='yes'?'可以':'不可以'}；${okA?'':''}(b) ${c.dataset.val==='yes'?'可以':'不可以'}`,
+        right:'(a) 可以；(b) 可以'});
+    }
   };
   $('#goL5').onclick=nextLevel;
 }
@@ -1087,8 +1107,13 @@ function renderL6(){
       <h3 style="font-size:17px;font-weight:900;margin-bottom:4px">⭐ 挑戰題</h3>
       <p style="font-size:14px;color:var(--ink-2);margin-bottom:14px">用 <b class="num">16、8、4 和 2</b> 可以組成多少個不同的比例？試把它們寫出來。</p>
       <div style="background:var(--cream);border:2px solid var(--cream-d);border-radius:var(--r-m);padding:16px">
-        <div class="q-line">我的答案：可以組成 <span class="blank" id="chCount">?</span> 個比例。</div>
-        <div class="q-line">它們是：<span class="blank" id="chList" style="min-width:min(90%,520px)">?</span></div>
+        <div class="q-line">我的答案：可以組成
+          <input class="blank-input num" id="chCount" type="number" inputmode="numeric" min="0" max="20" placeholder="幾多個" aria-label="比例個數">
+          個比例。</div>
+        <div class="q-line">它們是：
+          <textarea class="blank-input area" id="chList" rows="3"
+            placeholder="例如：16 : 8 = 4 : 2　　16 : 4 = 8 : 2 …（每行一個，用空格分開）"
+            aria-label="列出所有比例"></textarea></div>
         <div class="opts" style="justify-content:flex-end;margin-top:10px">
           <button class="btn sm sky" id="chCheck">檢查</button>
           <button class="btn sm ghost" id="chHint">💡 提示</button>
@@ -1232,24 +1257,81 @@ function bindL6(){
 
   // 挑戰題
   const chCheck=$('#chCheck'),chHint=$('#chHint');
+  const chCount=$('#chCount'),chList=$('#chList');
+  // 標準答案：8 個比例
+  const CH_ANSWERS=[
+    '2:4=8:16','2:8=4:16','8:16=2:4','16:4=8:2',
+    '16:8=4:2','4:16=2:8','8:2=16:4','4:2=16:8'
+  ];
+  // 解析學生輸入：抓出所有 a:b=c:d 形式的式子
+  function parseProportions(text){
+    const out=[];
+    // 以空白／逗號／分號／換行分隔，再逐段解析
+    String(text||'').split(/[\s,;、，；\n]+/).forEach(seg=>{
+      const m=seg.match(/^(\d+)\s*[:：]\s*(\d+)\s*=\s*(\d+)\s*[:：]\s*(\d+)$/);
+      if(m)out.push(`${+m[1]}:${+m[2]}=${+m[3]}:${+m[4]}`);
+    });
+    return out;
+  }
+  function checkChCount(){
+    const c=(chCount.value||'').trim();
+    return c!==''&&Number(c)===8;
+  }
+  function checkChList(){
+    const parsed=parseProportions(chList.value);
+    if(!parsed.length)return {n:0,ok:false,wrong:[]};
+    const uniq=[...new Set(parsed)];
+    // 數學上正確（有冇用齊 16、8、4、2）+ 是否啱用四個數
+    const good=uniq.filter(p=>{
+      const [l,r]=p.split('=');
+      const [a,b]=l.split(':').map(Number),[c,d]=r.split(':').map(Number);
+      const nums=[a,b,c,d].sort((x,y)=>x-y).join(',');
+      const okSet=(nums==='2,4,8,16');
+      const okRatio=a*d===b*c;
+      return okSet&&okRatio;
+    });
+    return {n:uniq.length,good:good.length,wrong:uniq.filter(x=>!good.includes(x))};
+  }
   chCheck.onclick=()=>{
-    const c=$('#chCount').textContent.trim();
-    const okCnt=c==='8';
-    $('#chFb').innerHTML=fb(okCnt?'good':'bad',okCnt?'🏆':'💡',
-      okCnt?`<b>完全正確！</b> 可以組成 <b class="num">8</b> 個不同的比例：<br>
+    const cntOK=checkChCount();
+    const lst=checkChList();
+    const listOK=lst.n===8&&lst.good===8;
+    const ok=cntOK&&listOK;
+    chCount.classList.toggle('ok',cntOK);
+    chCount.classList.toggle('no',!cntOK);
+    chList.classList.toggle('ok',listOK);
+    chList.classList.toggle('no',!listOK);
+    let msg;
+    if(ok){
+      msg=`<b>完全正確！</b> 可以組成 <b class="num">8</b> 個不同的比例，你寫低嘅全部啱晒！<br>
         <span class="num" style="font-size:16px;line-height:2.1;display:inline-block;margin-top:4px">
         2 : 4 = 8 : 16　　2 : 8 = 4 : 16　　8 : 16 = 2 : 4　　16 : 4 = 8 : 2<br>
         16 : 8 = 4 : 2　　4 : 16 = 2 : 8　　8 : 2 = 16 : 4　　4 : 2 = 16 : 8</span><br>
         <span style="font-size:13.5px">小技巧：<b>4 個不同的數能組成比例時，一共可以組成 8 個不同的比例</b>。
-        因為 16 × 2 = 8 × 4 = 4 × 16 = 2 × 8（都是 32），可以作為外項與內項配對，再考慮先後次序。</span>`
-        :`<b>再想想。</b> 用 16、8、4、2 兩兩配對，找出哪些兩個比的比值相同。<br>
-        <span style="font-size:13.5px">提示：先看哪些數相乘的積相等 —— 16 × 2 = 32，8 × 4 = 32，這樣就能配成比例了。</span>`);
-    if(okCnt){$('#goL6').disabled=false;answer(true,'q11');}
+        因為 16 × 2 = 8 × 4 = 4 × 16 = 2 × 8（都是 32），可以作為外項與內項配對，再考慮先後次序。</span>`;
+    }else{
+      const parts=[];
+      if(!cntOK)parts.push(`個數方面：你填咗 <b>${chCount.value||'（空）'}</b>，正確答案係 <b>8</b>。`);
+      if(!listOK){
+        if(lst.n===0)parts.push(`比例列表仲係空嘅，或者格式唔啱 —— 請寫成 <b>16 : 8 = 4 : 2</b> 咁樣（等號兩邊各一個比），可以每行一個。`);
+        else if(lst.good===0)parts.push(`你寫嘅 ${lst.n} 條入面，冇一條符合「用齊 16、8、4、2 而且外項×外項 = 內項×內項」。`);
+        else parts.push(`你寫嘅 ${lst.n} 條入面，<b>${lst.good}</b> 條啱，仲有 ${lst.n-lst.good} 條要再諗吓。`);
+      }
+      msg=`<b>再想想。</b> ${parts.join(' ')}<br>
+        <span style="font-size:13.5px">提示：先看哪些數相乘的積相等 —— 16 × 2 = 32，8 × 4 = 32，就可以配成比例，再考慮先後次序同倒轉。</span>`;
+    }
+    $('#chFb').innerHTML=fb(ok?'good':'bad',ok?'🏆':'💡',msg);
+    if(ok){$('#goL6').disabled=false;answer(true,'q11');}
   };
   chHint.onclick=()=>{
     $('#chFb').innerHTML=fb('info','💡',`用<b>比例的基本性質</b>：兩個外項的積 = 兩個內項的積。<br>
-      16 × 2 = 32，8 × 4 = 32，所以 16、2 可以做外項，8、4 可以做內項（或對調），再考慮兩邊的次序。`);
+      16 × 2 = 32，8 × 4 = 32，所以 16、2 可以做外項，8、4 可以做內項（或對調），再考慮兩邊的次序。<br>
+      <span style="font-size:13.5px">寫法提示：每行寫一個，例如 <b>16 : 8 = 4 : 2</b>，用空格分開就可以。</span>`);
+    chList.focus();
   };
+  // Enter 快速檢查
+  chCount.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();chList.focus();}});
+  chList.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();chCheck.click();}});
   $('#showWrong').onclick=showWrongModal;
   $('#goL6').onclick=showResult;
   checkDone();

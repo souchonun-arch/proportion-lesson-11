@@ -369,6 +369,54 @@ button{font-family:inherit; cursor:pointer; border:none; background:none; color:
 }
 .blank.ans{color:var(--ok);border-color:var(--ok)}
 .blank.user{color:var(--sky-d);border-color:var(--sky)}
+
+/* 可輸入的填答格 */
+.blank-input{
+  display:inline-block;min-width:96px;padding:5px 12px;
+  border:none;border-bottom:2.5px solid var(--sky);
+  background:#fff;border-radius:8px 8px 0 0;
+  font-family:var(--font-num);font-weight:800;font-size:17px;color:var(--ink);
+  text-align:center;outline:none;
+  transition:border-color .2s, box-shadow .2s, background .2s;
+}
+.blank-input::placeholder{font-family:var(--font);font-weight:600;font-size:13px;color:var(--ink-3)}
+.blank-input:hover{border-bottom-color:var(--sky-d)}
+.blank-input:focus{
+  border-bottom-color:var(--orange);
+  box-shadow:0 0 0 3px rgba(245,130,43,.18);
+  background:#FFFCF6;
+}
+.blank-input.area{
+  display:block;width:100%;min-width:0;min-height:82px;
+  text-align:left;font-size:16px;line-height:1.8;
+  resize:vertical;border:2px solid var(--sky);border-radius:12px;
+  padding:10px 12px;margin-top:8px;font-family:var(--font);
+}
+.blank-input.area:focus{border-color:var(--orange)}
+.blank-input.ok{border-bottom-color:var(--ok);background:var(--ok-bg)}
+.blank-input.ok.area{border-color:var(--ok)}
+.blank-input.no{border-bottom-color:var(--no);background:var(--no-bg)}
+.blank-input.no.area{border-color:var(--no)}
+
+/* 「可以／不可以」按鈕組 */
+.pick-group{display:inline-flex;gap:6px;vertical-align:middle;margin:0 2px}
+.pick-btn{
+  padding:3px 14px;border-radius:99px;
+  border:2px solid var(--line);background:#fff;
+  font-size:15px;font-weight:800;color:var(--ink-2);
+  transition:transform .15s cubic-bezier(.34,1.4,.64,1), border-color .2s, background .2s, color .2s;
+}
+.pick-btn:hover{border-color:var(--orange-l);color:var(--orange-d);transform:translateY(-1px)}
+.pick-btn.on{background:var(--sky);border-color:var(--sky);color:#fff;box-shadow:0 3px 9px rgba(79,179,232,.4)}
+.pick-group.pick-ok .pick-btn.ans{background:var(--ok-bg);border-color:var(--ok);color:#1F6B4B}
+.pick-group.pick-no .pick-btn.ans{background:var(--no-bg);border-color:var(--no);color:#9B3232}
+.pick-group.pick-no .pick-btn.ans::after{content:' ✓';font-weight:900}
+
+@media (max-width:760px){
+  .blank-input{min-width:82px;font-size:15px}
+  .blank-input.area{font-size:15px}
+  .pick-btn{padding:3px 10px;font-size:14px}
+}
 .q-line{font-size:16.5px;line-height:2.1;font-weight:600;margin:10px 0}
 .q-line .lab{font-weight:800}
 .q-line .frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 3px}
@@ -603,6 +651,6 @@ body.study-mode .class-only{display:none !important}
   </div>
 </div>
 
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>
