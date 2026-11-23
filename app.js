@@ -283,6 +283,8 @@ async function ultimateAnticipation(name){
   curtain.style.opacity='0';
   shake(stage,'hard');
 }
+/* UI 呼吸：只作用喺「需要學生操作」的元素（例如待答的題目、卡片），
+   絕對唔好掛喺整張關卡卡片上 —— 否則連插圖都會跟住縮放，非常突兀 */
 function armIdleBreath(el,delay=4200){
   if(!el)return;
   clearTimeout(el._idleT);
@@ -480,7 +482,9 @@ function goto(i){
   // 綁定本關互動
   const b=LEVELS_BIND[i];if(b)b();
   if(S.mode==='class')bindClassPanel();
-  armIdleBreath($('#qCard'));
+  // 注意：唔喺整張 #qCard 上掛呼吸動畫（會連插圖一齊縮放，非常突兀）
+  // 改為只喺「需要學生操作的按鈕」上加呼吸提示
+  armIdleBreath(document.querySelector('.level-body .opt, .level-body .vbtn'));
   window.scrollTo({top:0,behavior:'smooth'});
   DM.reset();
   if(S.mode==='class')startCountdown(30,()=>toast('⏰ 時間到！老師可以按「顯示答案」揭示。'));
